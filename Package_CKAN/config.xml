@@ -1,0 +1,111 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<project>
+  <actions/>
+  <description>&lt;p&gt;This command:&lt;/p&gt;&#xd;
+&lt;ol&gt;&#xd;
+  &lt;li&gt;Checks out the branch you&apos;ve asked for (overwriting any previous build for that branch/repo combination)&lt;/li&gt;&#xd;
+  &lt;li&gt;Runs the ./build.sh script from that branch with the correct arguments&lt;/li&gt;&#xd;
+  &lt;li&gt;Creates a new repository for you (or removes all packages from any existing repository)&lt;/li&gt;&#xd;
+  &lt;li&gt;Imports the built packages&lt;/li&gt;&#xd;
+&lt;/ol&gt;</description>
+  <keepDependencies>false</keepDependencies>
+  <properties>
+    <hudson.model.ParametersDefinitionProperty>
+      <parameterDefinitions>
+        <hudson.model.StringParameterDefinition>
+          <name>branch_name</name>
+          <description>The name of the branch within the CKAN repository that you wish to build.</description>
+          <defaultValue>master</defaultValue>
+        </hudson.model.StringParameterDefinition>
+        <hudson.model.StringParameterDefinition>
+          <name>repo_name</name>
+          <description>The name of the repository that you want the packages added to. It will appear at http://apt.ckan.org/&lt;repo_name&gt;. 
+WARNING: The old repository will be deleted as part of the build so be careful which name you use.</description>
+          <defaultValue>ckan-current-dev</defaultValue>
+        </hudson.model.StringParameterDefinition>
+        <hudson.model.StringParameterDefinition>
+          <name>package_version</name>
+          <description>A bumped version number for &lt;em&gt;all&lt;/em&gt; the packages built. (Is added as +0001 at the end of the package version)
+
+This should be a number strictly greater than the previous $package_version for the given $repo_name value.</description>
+          <defaultValue>0001</defaultValue>
+        </hudson.model.StringParameterDefinition>
+      </parameterDefinitions>
+    </hudson.model.ParametersDefinitionProperty>
+  </properties>
+  <scm class="hudson.scm.NullSCM"/>
+  <canRoam>true</canRoam>
+  <disabled>false</disabled>
+  <blockBuildWhenDownstreamBuilding>false</blockBuildWhenDownstreamBuilding>
+  <blockBuildWhenUpstreamBuilding>false</blockBuildWhenUpstreamBuilding>
+  <triggers class="vector"/>
+  <concurrentBuild>false</concurrentBuild>
+  <builders>
+    <hudson.tasks.Shell>
+      <command>#!/bin/sh
+
+echo &quot;Building $branch_name to repo $repo_name ( $package_version )&quot;
+echo &quot;Running as `whoami`.&quot;
+echo &quot;Running in $WORKSPACE&quot;
+
+BRANCH=$branch_name
+REPO_NAME=$repo_name
+CKAN_PACKAGE_VERSION=$package_version
+DEPS_PACKAGE_VERSION=$package_version
+
+REPOS=&quot;$WORKSPACE/repos&quot;
+CHECKOUT=&quot;$REPOS/$BRANCH-$REPO_NAME&quot;
+
+echo &quot;REPOS=$REPOS&quot;
+echo &quot;CHECKOUT=$CHECKOUT&quot;
+
+if [ ! -e &quot;$REPOS&quot; ] ; then
+    mkdir -p &quot;$REPOS&quot;
+fi
+
+if [ -e &quot;$CHECKOUT&quot; ] ; then
+    echo -n &quot;Removing previous checkout: $CHECKOUT ... &quot;
+    rm -rf &quot;$CHECKOUT&quot;
+    echo &quot;done.&quot;
+fi
+
+
+echo &quot;Cloning the $BRANCH branch ...&quot;
+mkdir -p &quot;$CHECKOUT&quot;
+git clone -b &quot;$BRANCH&quot; https://github.com/okfn/ckan.git &quot;$CHECKOUT&quot;
+echo &quot;done.&quot;
+
+echo &quot;Building the packages ...&quot;
+cd &quot;$CHECKOUT&quot;
+echo &quot;Working In: $PWD&quot;
+chmod +x build.sh
+./build.sh $CKAN_PACKAGE_VERSION $DEPS_PACKAGE_VERSION
+echo &quot;done.&quot;
+
+echo &quot;Packages created, now adding them to the repo...&quot;
+BUILDKIT_REPO_KEY=&quot;$WORKSPACE/buildkit/key&quot;
+BUILDKIT_REPO_BASE=&quot;$WORKSPACE/buildkit/repo&quot;
+BUILDKIT_REPO=&quot;$BUILDKIT_REPO_BASE/$REPO_NAME&quot;
+# Add the .debs to the repository and the export the latest files for upload
+if [ ! -e &quot;$BUILDKIT_REPO&quot; ] ; then
+    echo &quot;Cloining the base_lucid repository to $BUILDKIT_REPO ...&quot;
+    buildkit repo --key=&quot;$BUILDKIT_REPO_KEY&quot; --base-repo-dir=&quot;$BUILDKIT_REPO_BASE&quot; clone base_lucid $REPO_NAME
+    echo &quot;done.&quot;
+else
+    echo &quot;Removing all packages from the existing $BUILDKIT_REPO repo ...&quot;
+    buildkit repo --key=&quot;$BUILDKIT_REPO_KEY&quot; --base-repo-dir=&quot;$BUILDKIT_REPO_BASE&quot; remove -a $REPO_NAME
+    echo &quot;done.&quot;
+fi
+echo &quot;Adding the packages to the $REPO_NAME repo using files in $PWD/dist/buildkit/*.deb ...&quot;
+buildkit repo --key=&quot;$BUILDKIT_REPO_KEY&quot; --base-repo-dir=&quot;$BUILDKIT_REPO_BASE&quot; add $REPO_NAME dist/buildkit/*.deb
+echo &quot;done.&quot;
+
+echo &quot;Local repository layout updated.  Now uploading to S3...&quot;
+s3cmd --no-encrypt -r --delete-removed --acl-public sync &quot;$BUILDKIT_REPO_BASE/&quot; s3://apt.ckan.org
+echo &quot;Done.&quot;
+</command>
+    </hudson.tasks.Shell>
+  </builders>
+  <publishers/>
+  <buildWrappers/>
+</project>
