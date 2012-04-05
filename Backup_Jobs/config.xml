@@ -28,6 +28,8 @@ cp &quot;$JENKINS/Backup_Jobs/config.xml&quot; &quot;$REPO/Backup_Jobs/config.xm
 cp &quot;$JENKINS/CKAN_PostgreSQL_Tests/config.xml&quot; &quot;$REPO/CKAN_PostgreSQL_Tests/config.xml&quot;
 cp &quot;$JENKINS/Package_CKAN/config.xml&quot; &quot;$REPO/Package_CKAN/config.xml&quot;
 
+
+
 cd &quot;$REPO&quot;
 git status
 git add -A
