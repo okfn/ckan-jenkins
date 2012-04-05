@@ -1,15 +1,40 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <project>
+  <actions/>
+  <description>&lt;p&gt;Backs up the config files representing the jobs on this jenkins instance.&lt;/p&gt;&#xd;
+&#xd;
+&lt;p&gt;Each job has a &lt;em&gt;config.xml&lt;/em&gt; that represents the whole job&apos;s confiuguration.  This task copies each &lt;em&gt;config.xml&lt;/em&gt; file to a local git&#xd;
+  repository in &lt;em&gt;/home/okfn/jenkins_job_backup&lt;/em&gt;, which then pushes to &#xd;
+  &lt;a href=&quot;https://github.com/icmurray/CKAN-Jenkins-Jobs&quot;&gt;git@github.com:icmurray/CKAN-Jenkins-Jobs.git&lt;/a&gt;&lt;/p&gt;</description>
   <keepDependencies>false</keepDependencies>
   <properties/>
   <scm class="hudson.scm.NullSCM"/>
-  <canRoam>false</canRoam>
+  <canRoam>true</canRoam>
   <disabled>false</disabled>
   <blockBuildWhenDownstreamBuilding>false</blockBuildWhenDownstreamBuilding>
   <blockBuildWhenUpstreamBuilding>false</blockBuildWhenUpstreamBuilding>
   <triggers class="vector"/>
   <concurrentBuild>false</concurrentBuild>
-  <builders/>
+  <builders>
+    <hudson.tasks.Shell>
+      <command>#!/bin/sh
+
+REPO=&quot;/home/okfn/jenkins_job_backup&quot;
+JENKINS=&quot;/var/lib/jenkins/jobs&quot;
+
+echo &quot;Copying config files to $REPO&quot;
+
+cp &quot;$JENKINS/Backup_Jobs/config.xml&quot; &quot;$REPO/Backup_Jobs/config.xml&quot;
+cp &quot;$JENKINS/CKAN_PostgreSQL_Tests/config.xml&quot; &quot;$REPO/CKAN_PostgreSQL_Tests/config.xml&quot;
+cp &quot;$JENKINS/Package_CKAN/config.xml&quot; &quot;$REPO/Package_CKAN/config.xml&quot;
+
+cd &quot;$REPO&quot;
+git status
+git add -A
+git commit -m &quot;Changes commited by jenkins&quot;
+git push origin master</command>
+    </hudson.tasks.Shell>
+  </builders>
   <publishers/>
   <buildWrappers/>
 </project>
