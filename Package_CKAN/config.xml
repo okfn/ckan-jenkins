@@ -100,10 +100,90 @@ echo &quot;Adding the packages to the $REPO_NAME repo using files in $PWD/dist/b
 buildkit repo --key=&quot;$BUILDKIT_REPO_KEY&quot; --base-repo-dir=&quot;$BUILDKIT_REPO_BASE&quot; add $REPO_NAME dist/buildkit/*.deb
 echo &quot;done.&quot;
 
-echo &quot;Local repository layout updated.  Now uploading to S3...&quot;
-s3cmd --no-encrypt -r --delete-removed --acl-public sync &quot;$BUILDKIT_REPO_BASE/&quot; s3://test.icmurray.co.uk
-echo &quot;Done.&quot;
 </command>
+    </hudson.tasks.Shell>
+    <hudson.plugins.python.Python>
+      <command>&quot;&quot;&quot;
+Recursivly generates an index.html listings file for all directories under the
+current working directory.
+&quot;&quot;&quot;
+
+import os
+import time
+
+WORKSPACE = os.environ.get(&apos;WORKSPACE&apos;)
+if not WORKSPACE:
+    print &quot;Cannot run wiith $WORKSPACE environment variable set&quot;
+    exit(1)
+
+REPO_BASE = os.path.abspath(os.path.join(WORKSPACE, &apos;buildkit&apos;, &apos;repo&apos;))
+
+def main():
+    print &quot;Creating index.html listings&quot;
+    create_listing([REPO_BASE])
+
+def create_listing(directories):
+    if not directories:
+        return
+    d = directories.pop()
+    print &apos;Creating index.html for &quot;%s&quot;&apos; % d
+    files = [ f for f in os.listdir(d) if f != &apos;index.html&apos; ]
+    files.sort()
+
+
+    listings = []
+    for name in files:
+        path = os.path.abspath(os.path.join(d,name))
+        is_dir = os.path.isdir(path)
+
+        if is_dir:
+            directories.append(path)
+
+        data = dict(
+            href = name+&apos;/&apos; if is_dir else name,
+            date = time.strftime(&apos;%d-%b-%Y %H:%M&apos;, time.gmtime(os.path.getmtime(path))),
+            size = os.path.getsize(path) if not is_dir else &apos;-&apos;
+        )
+
+        listings.append(LIST_ITEM_TEMPLATE % data)
+
+    data = dict(
+        directory_name = d[len(REPO_BASE):] + &apos;/&apos;,
+        listings = &apos;\n&apos;.join(listings)
+    )
+
+    file_contents = FILE_TEMPLATE % data
+
+    f_out = open(os.path.join(d, &apos;index.html&apos;), &apos;w&apos;)
+    f_out.write(file_contents)
+    f_out.flush()
+    f_out.close()
+
+    create_listing(directories)
+
+LIST_ITEM_TEMPLATE = &apos;&lt;a href=&quot;%(href)s&quot;&gt;%(href)s&lt;/a&gt;\t%(date)s\t%(size)s&apos;
+FILE_TEMPLATE = &quot;&quot;&quot;
+&lt;html&gt;
+&lt;head&gt;&lt;title&gt;Index of %(directory_name)s&lt;/title&gt;&lt;/head&gt;
+&lt;body bgcolor=&quot;white&quot;&gt;
+&lt;h1&gt;Index of %(directory_name)s&lt;/h1&gt;&lt;hr&gt;&lt;pre&gt;
+&lt;a href=&quot;../&quot;&gt;../&lt;/a&gt;
+%(listings)s
+&lt;/pre&gt;&lt;hr&gt;&lt;/body&gt;
+&lt;/html&gt;
+&quot;&quot;&quot;
+
+if __name__ == &apos;__main__&apos;:
+    main()</command>
+    </hudson.plugins.python.Python>
+    <hudson.tasks.Shell>
+      <command>#!/bin/sh
+
+BUILDKIT_REPO_BASE=&quot;$WORKSPACE/buildkit/repo&quot;
+
+echo &quot;Local repository layout updated.  Now uploading to S3...&quot;
+s3cmd --no-encrypt -r --delete-removed --acl-public sync &quot;$BUILDKIT_REPO_BASE/&quot; s3://apt.ckan.org
+echo &quot;Done.&quot;</command>
     </hudson.tasks.Shell>
   </builders>
   <publishers/>
