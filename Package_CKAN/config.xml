@@ -101,7 +101,7 @@ buildkit repo --key=&quot;$BUILDKIT_REPO_KEY&quot; --base-repo-dir=&quot;$BUILDK
 echo &quot;done.&quot;
 
 echo &quot;Local repository layout updated.  Now uploading to S3...&quot;
-s3cmd --no-encrypt -r --delete-removed --acl-public sync &quot;$BUILDKIT_REPO_BASE/&quot; s3://apt.ckan.org
+s3cmd --no-encrypt -r --delete-removed --acl-public sync &quot;$BUILDKIT_REPO_BASE/&quot; s3://test.icmurray.co.uk
 echo &quot;Done.&quot;
 </command>
     </hudson.tasks.Shell>
