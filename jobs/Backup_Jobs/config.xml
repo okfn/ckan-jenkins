@@ -42,7 +42,7 @@ cd &quot;$REPO&quot;
 git status
 git add -A
 git commit -m &quot;$commit_message&quot;
-git push origin master</command>
+git push origin jenkins-archive</command>
     </hudson.tasks.Shell>
   </builders>
   <publishers/>
