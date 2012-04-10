@@ -7,17 +7,23 @@
   repository in &lt;em&gt;/home/okfn/jenkins_job_backup&lt;/em&gt;, which then pushes to &#xd;
   &lt;a href=&quot;https://github.com/icmurray/CKAN-Jenkins-Jobs&quot;&gt;git@github.com:icmurray/CKAN-Jenkins-Jobs.git&lt;/a&gt;&lt;/p&gt;</description>
   <keepDependencies>false</keepDependencies>
-  <properties/>
+  <properties>
+    <hudson.model.ParametersDefinitionProperty>
+      <parameterDefinitions>
+        <hudson.model.TextParameterDefinition>
+          <name>commit_message</name>
+          <description>Enter a commit message for any changes that have occurred.</description>
+          <defaultValue>Changes commited by jenkins</defaultValue>
+        </hudson.model.TextParameterDefinition>
+      </parameterDefinitions>
+    </hudson.model.ParametersDefinitionProperty>
+  </properties>
   <scm class="hudson.scm.NullSCM"/>
   <canRoam>true</canRoam>
   <disabled>false</disabled>
   <blockBuildWhenDownstreamBuilding>false</blockBuildWhenDownstreamBuilding>
   <blockBuildWhenUpstreamBuilding>false</blockBuildWhenUpstreamBuilding>
-  <triggers class="vector">
-    <hudson.triggers.TimerTrigger>
-      <spec>0 * * * *</spec>
-    </hudson.triggers.TimerTrigger>
-  </triggers>
+  <triggers class="vector"/>
   <concurrentBuild>false</concurrentBuild>
   <builders>
     <hudson.tasks.Shell>
@@ -28,16 +34,14 @@ JENKINS=&quot;/var/lib/jenkins/jobs&quot;
 
 echo &quot;Copying config files to $REPO&quot;
 
-cp &quot;$JENKINS/Backup_Jobs/config.xml&quot; &quot;$REPO/Backup_Jobs/config.xml&quot;
-cp &quot;$JENKINS/CKAN_PostgreSQL_Tests/config.xml&quot; &quot;$REPO/CKAN_PostgreSQL_Tests/config.xml&quot;
-cp &quot;$JENKINS/Package_CKAN/config.xml&quot; &quot;$REPO/Package_CKAN/config.xml&quot;
-
-
+cp &quot;$JENKINS/Backup_Jobs/config.xml&quot; &quot;$REPO/jobs/Backup_Jobs/config.xml&quot;
+cp &quot;$JENKINS/CKAN_PostgreSQL_Tests/config.xml&quot; &quot;$REPO/jobs/CKAN_PostgreSQL_Tests/config.xml&quot;
+cp &quot;$JENKINS/Package_CKAN/config.xml&quot; &quot;$REPO/jobs/Package_CKAN/config.xml&quot;
 
 cd &quot;$REPO&quot;
 git status
 git add -A
-git commit -m &quot;Changes commited by jenkins&quot;
+git commit -m &quot;$commit_message&quot;
 git push origin master</command>
     </hudson.tasks.Shell>
   </builders>
