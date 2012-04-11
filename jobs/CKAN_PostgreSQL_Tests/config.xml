@@ -74,7 +74,7 @@ python 2206132/ckan-bootstrap.py pyenv --ckan-location=$WORKSPACE/
 # Activate the pyenv and run the tests.
 . $PYENV/bin/activate
 cd $PYENV/src/ckan
-nosetests ckan/tests --ckan --with-pylons=test-core.ini --with-xunit</command>
+nosetests --ckan --with-pylons=test-core.ini --with-xunit</command>
     </hudson.tasks.Shell>
   </builders>
   <publishers>
