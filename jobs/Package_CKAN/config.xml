@@ -27,8 +27,8 @@ WARNING: The old repository will be deleted as part of the build so be careful w
           <name>package_version</name>
           <description>A bumped version number for &lt;em&gt;all&lt;/em&gt; the packages built. (Is added as +0001 at the end of the package version)
 
-This should be a number strictly greater than the previous $package_version for the given $repo_name value.</description>
-          <defaultValue>0001</defaultValue>
+Leave blank for the build number to be used automatically, otherwise, this should be a number strictly greater than the previous $package_version for the given $repo_name value.</description>
+          <defaultValue></defaultValue>
         </hudson.model.StringParameterDefinition>
       </parameterDefinitions>
     </hudson.model.ParametersDefinitionProperty>
@@ -44,14 +44,20 @@ This should be a number strictly greater than the previous $package_version for 
     <hudson.tasks.Shell>
       <command>#!/bin/sh
 
-echo &quot;Building $branch_name to repo $repo_name ( $package_version )&quot;
+if [ -z $package_version ] ; then
+    package_version=$BUILD_NUMBER
+fi
+
+LEADING_PACKAGE_VERSION=`printf &apos;%08d&apos; $package_version`
+
+echo &quot;Building $branch_name to repo $repo_name ( $LEADING_PACKAGE_VERSION )&quot;
 echo &quot;Running as `whoami`.&quot;
 echo &quot;Running in $WORKSPACE&quot;
 
 BRANCH=$branch_name
 REPO_NAME=$repo_name
-CKAN_PACKAGE_VERSION=$package_version
-DEPS_PACKAGE_VERSION=$package_version
+CKAN_PACKAGE_VERSION=$LEADING_PACKAGE_VERSION
+DEPS_PACKAGE_VERSION=$LEADING_PACKAGE_VERSION
 
 REPOS=&quot;$WORKSPACE/repos&quot;
 CHECKOUT=&quot;$REPOS/$BRANCH-$REPO_NAME&quot;
@@ -99,7 +105,6 @@ fi
 echo &quot;Adding the packages to the $REPO_NAME repo using files in $PWD/dist/buildkit/*.deb ...&quot;
 buildkit repo --key=&quot;$BUILDKIT_REPO_KEY&quot; --base-repo-dir=&quot;$BUILDKIT_REPO_BASE&quot; add $REPO_NAME dist/buildkit/*.deb
 echo &quot;done.&quot;
-
 </command>
     </hudson.tasks.Shell>
     <hudson.plugins.python.Python>
