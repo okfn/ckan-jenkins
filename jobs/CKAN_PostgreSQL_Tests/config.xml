@@ -19,7 +19,7 @@
     </userRemoteConfigs>
     <branches>
       <hudson.plugins.git.BranchSpec>
-        <name>**</name>
+        <name>master</name>
       </hudson.plugins.git.BranchSpec>
     </branches>
     <disableSubmodules>false</disableSubmodules>
@@ -48,11 +48,7 @@
   <disabled>false</disabled>
   <blockBuildWhenDownstreamBuilding>false</blockBuildWhenDownstreamBuilding>
   <blockBuildWhenUpstreamBuilding>false</blockBuildWhenUpstreamBuilding>
-  <triggers class="vector">
-    <com.cloudbees.jenkins.GitHubPushTrigger>
-      <spec></spec>
-    </com.cloudbees.jenkins.GitHubPushTrigger>
-  </triggers>
+  <triggers class="vector"/>
   <concurrentBuild>false</concurrentBuild>
   <builders>
     <hudson.tasks.Shell>
@@ -67,13 +63,21 @@ fi
 # Remove old migrations *.pyc files are they break the tests.
 rm -f $WORKSPACE/ckan/migration/versions/*.pyc
 
-# Create a new pyenv and install CKAN and its dependencies into it.
-git clone git://gist.github.com/2206132.git
+# Remove old development.ini file, if you leave it around it won&apos;t be overridden and will break tests.
+rm -f $WORKSPACE/development.ini
+
+# Clone or update the script for installing CKAN and its dependencies.
+if [ -d 2206132 ]; then
+    cd 2206132; git pull; cd -
+else
+    git clone git://gist.github.com/2206132.git
+fi
+
+# Run the script to create a new pyenv and install CKAN and its dependencies into it.
 python 2206132/ckan-bootstrap.py pyenv --ckan-location=$WORKSPACE/
 
 # Activate the pyenv and run the tests.
 . $PYENV/bin/activate
-cd $PYENV/src/ckan
 nosetests --ckan --with-pylons=test-core.ini --with-xunit ckan/tests ckanext</command>
     </hudson.tasks.Shell>
   </builders>
