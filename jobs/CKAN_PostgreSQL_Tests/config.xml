@@ -78,6 +78,12 @@ rm development.ini.1
 
 # Activate the pyenv and run the tests.
 . $PYENV/bin/activate
+
+# Rebuild db in case model is different from one commit to another.
+paster db clean
+paster db create-from-model
+
+# Run the tests.
 nosetests --ckan --with-pylons=test-core.ini --with-xunit ckan/tests ckanext</command>
     </hudson.tasks.Shell>
   </builders>
