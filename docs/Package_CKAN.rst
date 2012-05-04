@@ -31,6 +31,9 @@ package_version
   the first time, then ``0001`` is fine.  When packaging ``ckan-1.6.1`` the next
   time, increment this value to ``0002``, and so on.
 
+  It's perfectly fine to leave this blank, in which case the (auto-incrementing)
+  jenkins build number is used instead.
+
 #.  The console output can be observed for any errors.
 #.  Once completed, the built packages will be available on
     ``http://apt.ckan.org.s3.amazonaws.com/{repo_name}``.
