@@ -84,7 +84,7 @@ paster db clean
 paster db create-from-model
 
 # Run the tests.
-nosetests --ckan --with-pylons=test-core.ini --with-xunit ckan/tests ckanext</command>
+nosetests --ckan --with-pylons=test-core.ini --with-xunit ckan ckanext</command>
     </hudson.tasks.Shell>
   </builders>
   <publishers>
