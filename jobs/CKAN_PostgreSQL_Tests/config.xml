@@ -70,7 +70,7 @@ git clone git://gist.github.com/2206132.git
 # Run the script to create a new pyenv and install CKAN and its dependencies into it.
 python 2206132/ckan-bootstrap.py pyenv --ckan-location=$WORKSPACE/
 
-# Absolutely hardcode shell-scripting action.
+# Absolutely hardcore shell-scripting action.
 sed &apos;s|#solr_url = http://127.0.0.1:8983/solr|solr_url = http://127.0.0.1:8983/solr|&apos; &lt;development.ini &gt;development.ini.1
 sed &apos;s|# ckan.site_id = ckan.net|ckan.site_id = ckan.net|&apos; &lt;development.ini.1 &gt;development.ini.2
 mv development.ini.2 development.ini
