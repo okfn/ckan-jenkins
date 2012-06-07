@@ -56,7 +56,12 @@
   <concurrentBuild>false</concurrentBuild>
   <builders>
     <hudson.tasks.Shell>
-      <command>#!/bin/sh
+      <command>#!/bin/sh -e
+
+# Print out the build description we want (to be retrieved later by the
+# Jenkins Description Setter Plugin).
+echo &apos;Set build description to:&apos; $GIT_BRANCH
+
 PYENV=$WORKSPACE/pyenv
 
 cd $WORKSPACE
@@ -93,6 +98,12 @@ nosetests --ckan --with-pylons=test-core.ini --with-xunit ckan ckanext</command>
       <keepLongStdio>false</keepLongStdio>
       <testDataPublishers/>
     </hudson.tasks.junit.JUnitResultArchiver>
+    <hudson.plugins.descriptionsetter.DescriptionSetterPublisher>
+      <regexp>Set build description to: (.*)</regexp>
+      <regexpForFailed></regexpForFailed>
+      <descriptionForFailed>Set build description to: (.*)</descriptionForFailed>
+      <setForMatrix>false</setForMatrix>
+    </hudson.plugins.descriptionsetter.DescriptionSetterPublisher>
   </publishers>
   <buildWrappers/>
 </project>
