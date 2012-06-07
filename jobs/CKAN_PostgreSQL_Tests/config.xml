@@ -67,7 +67,7 @@ PYENV=$WORKSPACE/pyenv
 cd $WORKSPACE
 
 # Delete stuff from last time.
-rm -rf 2206132 pyenv data sstore
+rm -rf 2206132 pyenv data sstore development.ini
 git clean -fxd
 
 # Clone the virtualenv bootstrap script for installing CKAN and its dependencies.
@@ -75,9 +75,6 @@ git clone git://gist.github.com/2206132.git
 
 # Run the script to create a new pyenv and install CKAN and its dependencies into it.
 python 2206132/ckan-bootstrap.py pyenv --ckan-location=$WORKSPACE/
-
-# Make the development.ini file.
-paster make-config ckan development.ini
 
 # Absolutely hardcore shell-scripting action.
 sed &apos;s|#solr_url = http://127.0.0.1:8983/solr|solr_url = http://127.0.0.1:8983/solr|&apos; &lt;development.ini &gt;development.ini.1
