@@ -101,7 +101,7 @@ BUILDKIT_REPO=&quot;$BUILDKIT_REPO_BASE/$REPO_NAME&quot;
 # Add the .debs to the repository and the export the latest files for upload
 if [ ! -e &quot;$BUILDKIT_REPO&quot; ] ; then
     echo &quot;Cloining the base_lucid repository to $BUILDKIT_REPO ...&quot;
-    buildkit repo --key=&quot;$BUILDKIT_REPO_KEY&quot; --base-repo-dir=&quot;$BUILDKIT_REPO_BASE&quot; clone --ubuntu-release &quot;$ubuntu_release&quot; &quot;base_${ubuntu_release}&quot; $REPO_NAME
+    buildkit repo --key=&quot;$BUILDKIT_REPO_KEY&quot; --base-repo-dir=&quot;$BUILDKIT_REPO_BASE&quot; clone &quot;base_${ubuntu_release}&quot; $REPO_NAME
     echo &quot;done.&quot;
 else
     echo &quot;Removing all packages from the existing $BUILDKIT_REPO repo ...&quot;
