@@ -110,6 +110,20 @@ else
 fi
 echo &quot;Adding the packages to the $REPO_NAME repo using files in $PWD/dist/buildkit/*.deb ...&quot;
 buildkit repo --key=&quot;$BUILDKIT_REPO_KEY&quot; --base-repo-dir=&quot;$BUILDKIT_REPO_BASE&quot; add --ubuntu-release &quot;$ubuntu_release&quot; $REPO_NAME dist/buildkit/*.deb
+echo &quot;done.&quot;
+
+echo &quot;Cleaning debs from previous build&quot;
+rm dist/buildkit/*.deb
+
+echo &quot;Building the lucid packages&quot;
+cd &quot;$CHECKOUT&quot;
+echo &quot;Working In: $PWD&quot;
+chmod +x build.sh
+./build.sh &quot;$CKAN_PACKAGE_VERSION&quot; &quot;$DEPS_PACKAGE_VERSION&quot; &quot;lucid&quot;
+echo &quot;done.&quot;
+
+echo &quot;Adding the packages to the $REPO_NAME repo using files in $PWD/dist/buildkit/*.deb ...&quot;
+buildkit repo --key=&quot;$BUILDKIT_REPO_KEY&quot; --base-repo-dir=&quot;$BUILDKIT_REPO_BASE&quot; add --ubuntu-release lucid $REPO_NAME dist/buildkit/*.deb
 echo &quot;done.&quot;</command>
     </hudson.tasks.Shell>
     <hudson.plugins.python.Python>
