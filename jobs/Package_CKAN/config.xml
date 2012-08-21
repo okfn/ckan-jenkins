@@ -106,16 +106,6 @@ echo &quot;Adding the packages to the $REPO_NAME repo using files in $PWD/dist/b
 buildkit repo --key=&quot;$BUILDKIT_REPO_KEY&quot; --base-repo-dir=&quot;$BUILDKIT_REPO_BASE&quot; add --ubuntu-release lucid $REPO_NAME dist/buildkit/*.deb
 echo &quot;done.&quot;
 
-echo &quot;Cleaning lucid build&quot;
-echo -n &quot;Removing previous checkout: $CHECKOUT ... &quot;
-rm -rf &quot;$CHECKOUT&quot;
-echo &quot;done.&quot;
-
-echo &quot;Cloning the $BRANCH branch ...&quot;
-mkdir -p &quot;$CHECKOUT&quot;
-git clone -b &quot;$BRANCH&quot; https://github.com/okfn/ckan.git &quot;$CHECKOUT&quot;
-echo &quot;done.&quot;
-
 echo &quot;Building the precise packages&quot;
 cd &quot;$CHECKOUT&quot;
 echo &quot;Working In: $PWD&quot;
