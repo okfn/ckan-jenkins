@@ -30,11 +30,6 @@ WARNING: The old repository will be deleted as part of the build so be careful w
 Leave blank for the build number to be used automatically, otherwise, this should be a number strictly greater than the previous $package_version for the given $repo_name value.</description>
           <defaultValue></defaultValue>
         </hudson.model.StringParameterDefinition>
-        <hudson.model.StringParameterDefinition>
-          <name>ubuntu_release</name>
-          <description>The ubuntu release</description>
-          <defaultValue>precise</defaultValue>
-        </hudson.model.StringParameterDefinition>
       </parameterDefinitions>
     </hudson.model.ParametersDefinitionProperty>
   </properties>
@@ -58,7 +53,6 @@ LEADING_PACKAGE_VERSION=`printf &apos;%08d&apos; $package_version`
 echo &quot;Building $branch_name to repo $repo_name ( $LEADING_PACKAGE_VERSION )&quot;
 echo &quot;Running as `whoami`.&quot;
 echo &quot;Running in $WORKSPACE&quot;
-echo &quot;Ubuntu release: $ubuntu_release&quot;
 
 BRANCH=$branch_name
 REPO_NAME=$repo_name
@@ -87,11 +81,11 @@ mkdir -p &quot;$CHECKOUT&quot;
 git clone -b &quot;$BRANCH&quot; https://github.com/okfn/ckan.git &quot;$CHECKOUT&quot;
 echo &quot;done.&quot;
 
-echo &quot;Building the packages ...&quot;
+echo &quot;Building the lucid packages ...&quot;
 cd &quot;$CHECKOUT&quot;
 echo &quot;Working In: $PWD&quot;
 chmod +x build.sh
-./build.sh &quot;$CKAN_PACKAGE_VERSION&quot; &quot;$DEPS_PACKAGE_VERSION&quot; &quot;$ubuntu_release&quot;
+./build.sh &quot;$CKAN_PACKAGE_VERSION&quot; &quot;$DEPS_PACKAGE_VERSION&quot; lucid
 echo &quot;done.&quot;
 
 echo &quot;Packages created, now adding them to the repo...&quot;
@@ -101,29 +95,36 @@ BUILDKIT_REPO=&quot;$BUILDKIT_REPO_BASE/$REPO_NAME&quot;
 # Add the .debs to the repository and the export the latest files for upload
 if [ ! -e &quot;$BUILDKIT_REPO&quot; ] ; then
     echo &quot;Cloining the base_lucid repository to $BUILDKIT_REPO ...&quot;
-    buildkit repo --key=&quot;$BUILDKIT_REPO_KEY&quot; --base-repo-dir=&quot;$BUILDKIT_REPO_BASE&quot; clone &quot;base_${ubuntu_release}&quot; $REPO_NAME
+    buildkit repo --key=&quot;$BUILDKIT_REPO_KEY&quot; --base-repo-dir=&quot;$BUILDKIT_REPO_BASE&quot; clone base_precise $REPO_NAME
     echo &quot;done.&quot;
 else
     echo &quot;Removing all packages from the existing $BUILDKIT_REPO repo ...&quot;
-    buildkit repo --key=&quot;$BUILDKIT_REPO_KEY&quot; --base-repo-dir=&quot;$BUILDKIT_REPO_BASE&quot; remove --ubuntu-release &quot;$ubuntu_release&quot; -a $REPO_NAME
+    buildkit repo --key=&quot;$BUILDKIT_REPO_KEY&quot; --base-repo-dir=&quot;$BUILDKIT_REPO_BASE&quot; remove --ubuntu-release lucid -a $REPO_NAME
     echo &quot;done.&quot;
 fi
 echo &quot;Adding the packages to the $REPO_NAME repo using files in $PWD/dist/buildkit/*.deb ...&quot;
-buildkit repo --key=&quot;$BUILDKIT_REPO_KEY&quot; --base-repo-dir=&quot;$BUILDKIT_REPO_BASE&quot; add --ubuntu-release &quot;$ubuntu_release&quot; $REPO_NAME dist/buildkit/*.deb
+buildkit repo --key=&quot;$BUILDKIT_REPO_KEY&quot; --base-repo-dir=&quot;$BUILDKIT_REPO_BASE&quot; add --ubuntu-release lucid $REPO_NAME dist/buildkit/*.deb
 echo &quot;done.&quot;
 
-echo &quot;Cleaning debs from previous build&quot;
-rm dist/buildkit/*.deb
+echo &quot;Cleaning lucid build&quot;
+echo -n &quot;Removing previous checkout: $CHECKOUT ... &quot;
+rm -rf &quot;$CHECKOUT&quot;
+echo &quot;done.&quot;
 
-echo &quot;Building the lucid packages&quot;
+echo &quot;Cloning the $BRANCH branch ...&quot;
+mkdir -p &quot;$CHECKOUT&quot;
+git clone -b &quot;$BRANCH&quot; https://github.com/okfn/ckan.git &quot;$CHECKOUT&quot;
+echo &quot;done.&quot;
+
+echo &quot;Building the precise packages&quot;
 cd &quot;$CHECKOUT&quot;
 echo &quot;Working In: $PWD&quot;
 chmod +x build.sh
-./build.sh &quot;$CKAN_PACKAGE_VERSION&quot; &quot;$DEPS_PACKAGE_VERSION&quot; &quot;lucid&quot;
+./build.sh &quot;$CKAN_PACKAGE_VERSION&quot; &quot;$DEPS_PACKAGE_VERSION&quot; precise
 echo &quot;done.&quot;
 
 echo &quot;Adding the packages to the $REPO_NAME repo using files in $PWD/dist/buildkit/*.deb ...&quot;
-buildkit repo --key=&quot;$BUILDKIT_REPO_KEY&quot; --base-repo-dir=&quot;$BUILDKIT_REPO_BASE&quot; add --ubuntu-release lucid $REPO_NAME dist/buildkit/*.deb
+buildkit repo --key=&quot;$BUILDKIT_REPO_KEY&quot; --base-repo-dir=&quot;$BUILDKIT_REPO_BASE&quot; add --ubuntu-release precise $REPO_NAME dist/buildkit/*.deb
 echo &quot;done.&quot;</command>
     </hudson.tasks.Shell>
     <hudson.plugins.python.Python>
