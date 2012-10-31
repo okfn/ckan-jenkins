@@ -23,7 +23,11 @@
   <disabled>false</disabled>
   <blockBuildWhenDownstreamBuilding>false</blockBuildWhenDownstreamBuilding>
   <blockBuildWhenUpstreamBuilding>false</blockBuildWhenUpstreamBuilding>
-  <triggers class="vector"/>
+  <triggers class="vector">
+    <hudson.triggers.TimerTrigger>
+      <spec>0 * * * *</spec>
+    </hudson.triggers.TimerTrigger>
+  </triggers>
   <concurrentBuild>false</concurrentBuild>
   <builders>
     <hudson.tasks.Shell>
@@ -34,9 +38,17 @@ JENKINS=&quot;/var/lib/jenkins/jobs&quot;
 
 echo &quot;Copying config files to $REPO&quot;
 
+mkdir -p &quot;$REPO/jobs/Backup_Jobs&quot;
 cp &quot;$JENKINS/Backup_Jobs/config.xml&quot; &quot;$REPO/jobs/Backup_Jobs/config.xml&quot;
+
+mkdir -p &quot;$REPO/jobs/CKAN_PostgreSQL_Test&quot;
 cp &quot;$JENKINS/CKAN_PostgreSQL_Tests/config.xml&quot; &quot;$REPO/jobs/CKAN_PostgreSQL_Tests/config.xml&quot;
+
+mkdir -p &quot;$REPO/jobs/Package_CKAN&quot;
 cp &quot;$JENKINS/Package_CKAN/config.xml&quot; &quot;$REPO/jobs/Package_CKAN/config.xml&quot;
+
+mkdir -p &quot;$REPO/jobs/Build_CKAN_Docs&quot;
+cp &quot;$JENKINS/Build_CKAN_Docs/config.xml&quot; &quot;$REPO/jobs/Build_CKAN_Docs/config.xml&quot;
 
 cd &quot;$REPO&quot;
 git status

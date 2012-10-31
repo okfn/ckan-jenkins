@@ -1,0 +1,125 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<project>
+  <actions/>
+  <description>Builds CKAN&apos;s docs with Sphinx and publish them at&#xd;
+http://docs.ckan.org.s3-website-eu-west-1.amazonaws.com</description>
+  <keepDependencies>false</keepDependencies>
+  <properties>
+    <com.coravy.hudson.plugins.github.GithubProjectProperty>
+      <projectUrl>https://github.com/okfn/ckan/</projectUrl>
+    </com.coravy.hudson.plugins.github.GithubProjectProperty>
+  </properties>
+  <scm class="hudson.plugins.git.GitSCM">
+    <configVersion>2</configVersion>
+    <userRemoteConfigs>
+      <hudson.plugins.git.UserRemoteConfig>
+        <name></name>
+        <refspec></refspec>
+        <url>https://github.com/okfn/ckan.git</url>
+      </hudson.plugins.git.UserRemoteConfig>
+    </userRemoteConfigs>
+    <branches>
+      <hudson.plugins.git.BranchSpec>
+        <name>master</name>
+      </hudson.plugins.git.BranchSpec>
+    </branches>
+    <disableSubmodules>false</disableSubmodules>
+    <recursiveSubmodules>false</recursiveSubmodules>
+    <doGenerateSubmoduleConfigurations>false</doGenerateSubmoduleConfigurations>
+    <authorOrCommitter>false</authorOrCommitter>
+    <clean>false</clean>
+    <wipeOutWorkspace>false</wipeOutWorkspace>
+    <pruneBranches>false</pruneBranches>
+    <remotePoll>false</remotePoll>
+    <buildChooser class="hudson.plugins.git.util.DefaultBuildChooser"/>
+    <gitTool>Default</gitTool>
+    <submoduleCfg class="list"/>
+    <relativeTargetDir></relativeTargetDir>
+    <reference></reference>
+    <excludedRegions></excludedRegions>
+    <excludedUsers></excludedUsers>
+    <gitConfigName></gitConfigName>
+    <gitConfigEmail></gitConfigEmail>
+    <skipTag>false</skipTag>
+    <includedRegions></includedRegions>
+    <scmName></scmName>
+  </scm>
+  <quietPeriod>180</quietPeriod>
+  <canRoam>true</canRoam>
+  <disabled>false</disabled>
+  <blockBuildWhenDownstreamBuilding>false</blockBuildWhenDownstreamBuilding>
+  <blockBuildWhenUpstreamBuilding>false</blockBuildWhenUpstreamBuilding>
+  <triggers class="vector">
+    <com.cloudbees.jenkins.GitHubPushTrigger>
+      <spec></spec>
+    </com.cloudbees.jenkins.GitHubPushTrigger>
+  </triggers>
+  <concurrentBuild>false</concurrentBuild>
+  <builders>
+    <hudson.tasks.Shell>
+      <command>#!/usr/bin/env python
+import os
+import subprocess
+import sys
+
+# WORKSPACE environment variable set by Jenkins.
+WORKSPACE = os.environ[&apos;WORKSPACE&apos;]
+
+# GIT_BRANCH and GIT_COMMIT environment variables set by Jenkins git plugin.
+GIT_BRANCH = os.environ[&apos;GIT_BRANCH&apos;]
+GIT_COMMIT = os.environ[&apos;GIT_COMMIT&apos;]
+
+# The location of our virtualenv.
+PYENV = os.path.join(WORKSPACE, &apos;pyenv&apos;)
+
+def do_command(command, cwd=WORKSPACE):
+    return subprocess.check_call(command, shell=True, cwd=cwd)
+
+# Print out the build description we want (to be retrieved later by the
+# Jenkins Description Setter Plugin).
+print &quot;Set build description to: {GIT_BRANCH} {GIT_COMMIT}&quot;.format(GIT_BRANCH=GIT_BRANCH, GIT_COMMIT=GIT_COMMIT)
+
+# Delete stuff from last time.
+do_command(&apos;rm -rf {PYENV}&apos;.format(PYENV=PYENV))
+do_command(&apos;rm -f **/*.pyc&apos;)
+do_command(&apos;git clean -fxd&apos;)
+
+# Create the virtualenv.
+do_command(&apos;virtualenv {PYENV}&apos;.format(PYENV=PYENV))
+
+# Install the CKAN source code into the virtualenv.
+do_command(&apos;. {PYENV}/bin/activate; pip install --ignore-installed -e {WORKSPACE}/&apos;.format(PYENV=PYENV, WORKSPACE=WORKSPACE))
+
+# Install the git submodules (needed for the OKFN Sphinx theme).
+do_command(&apos;git submodule init&apos;)
+do_command(&apos;git submodule update&apos;)
+
+# Install the dependencies from pip-requirements-docs.txt into the virtualenv.
+do_command(&apos;. {PYENV}/bin/activate; pip install --ignore-installed -r {WORKSPACE}/pip-requirements-docs.txt&apos;.format(PYENV=PYENV, WORKSPACE=WORKSPACE))
+
+# Build the docs.
+do_command(&apos;. {PYENV}/bin/activate; python setup.py build_sphinx&apos;.format(PYENV=PYENV))
+
+# Translate git branch names to match the URLs used on readthedocs.
+if GIT_BRANCH in (&apos;origin/HEAD&apos;, &apos;master&apos;):
+    SUBDIR = &apos;latest&apos;
+elif GIT_BRANCH.startswith(&apos;origin/release-v&apos;):
+    # Get the tag name, e.g. branch release-v1.7 has tag ckan-1.7.
+    SUBDIR =  &quot;ckan-&quot; + GIT_BRANCH[16:]
+else:
+    SUBDIR = GIT_BRANCH.split(&apos;/&apos;)[-1]
+
+# Sync the docs to the public html directory.
+do_command(&apos;s3cmd -c ~/.s3cfg-docs.ckan.org sync --delete-removed {WORKSPACE}/build/sphinx/html/ s3://docs.ckan.org/en/{SUBDIR}/&apos;.format(WORKSPACE=WORKSPACE, SUBDIR=SUBDIR))
+do_command(&apos;s3cmd -v -c ~/.s3cfg-docs.ckan.org setacl --acl-public --recursive s3://docs.ckan.org/en/{SUBDIR}/&apos;.format(SUBDIR=SUBDIR))</command>
+    </hudson.tasks.Shell>
+  </builders>
+  <publishers>
+    <hudson.plugins.descriptionsetter.DescriptionSetterPublisher>
+      <regexp>Set build description to: (.*)</regexp>
+      <regexpForFailed>Set build description to: (.*)</regexpForFailed>
+      <setForMatrix>false</setForMatrix>
+    </hudson.plugins.descriptionsetter.DescriptionSetterPublisher>
+  </publishers>
+  <buildWrappers/>
+</project>

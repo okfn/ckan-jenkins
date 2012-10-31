@@ -56,25 +56,42 @@
   <concurrentBuild>false</concurrentBuild>
   <builders>
     <hudson.tasks.Shell>
-      <command>#!/bin/sh
+      <command>#!/bin/sh -e
+
+# Print out the build description we want (to be retrieved later by the
+# Jenkins Description Setter Plugin).
+echo &apos;Set build description to:&apos; $GIT_BRANCH $GIT_COMMIT
+
 PYENV=$WORKSPACE/pyenv
 
-# Delete previous pyenv.
-if [ -d $PYENV ]; then
-    rm -rf $PYENV
-fi
+cd $WORKSPACE
 
-# Remove old migrations *.pyc files are they break the tests.
-rm -f $WORKSPACE/ckan/migration/versions/*.pyc
+# Delete stuff from last time.
+rm -rf 2206132 pyenv data sstore development.ini nosetests.xml
+rm -f **/*.pyc
+git clean -fxd
 
-# Create a new pyenv and install CKAN and its dependencies into it.
+# Clone the virtualenv bootstrap script for installing CKAN and its dependencies.
 git clone git://gist.github.com/2206132.git
+
+# Run the script to create a new pyenv and install CKAN and its dependencies into it.
 python 2206132/ckan-bootstrap.py pyenv --ckan-location=$WORKSPACE/
+
+# Absolutely hardcore shell-scripting action.
+sed &apos;s|#solr_url = http://127.0.0.1:8983/solr|solr_url = http://127.0.0.1:8983/solr|&apos; &lt;development.ini &gt;development.ini.1
+sed &apos;s|# ckan.site_id = ckan.net|ckan.site_id = ckan.net|&apos; &lt;development.ini.1 &gt;development.ini.2
+mv development.ini.2 development.ini
+rm development.ini.1
 
 # Activate the pyenv and run the tests.
 . $PYENV/bin/activate
-cd $PYENV/src/ckan
-nosetests ckan/tests --ckan --with-pylons=test-core.ini --with-xunit</command>
+
+# Rebuild db in case model is different from one commit to another.
+paster db clean
+paster db create-from-model
+
+# Run the tests.
+nosetests --ckan --with-pylons=test-core.ini --with-xunit ckan ckanext</command>
     </hudson.tasks.Shell>
   </builders>
   <publishers>
@@ -83,6 +100,11 @@ nosetests ckan/tests --ckan --with-pylons=test-core.ini --with-xunit</command>
       <keepLongStdio>false</keepLongStdio>
       <testDataPublishers/>
     </hudson.tasks.junit.JUnitResultArchiver>
+    <hudson.plugins.descriptionsetter.DescriptionSetterPublisher>
+      <regexp>Set build description to: (.*)</regexp>
+      <regexpForFailed>Set build description to: (.*)</regexpForFailed>
+      <setForMatrix>false</setForMatrix>
+    </hudson.plugins.descriptionsetter.DescriptionSetterPublisher>
   </publishers>
   <buildWrappers/>
 </project>
