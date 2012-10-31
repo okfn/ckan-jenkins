@@ -41,7 +41,7 @@ echo &quot;Copying config files to $REPO&quot;
 cp &quot;$JENKINS/Backup_Jobs/config.xml&quot; &quot;$REPO/jobs/Backup_Jobs/config.xml&quot;
 cp &quot;$JENKINS/CKAN_PostgreSQL_Tests/config.xml&quot; &quot;$REPO/jobs/CKAN_PostgreSQL_Tests/config.xml&quot;
 cp &quot;$JENKINS/Package_CKAN/config.xml&quot; &quot;$REPO/jobs/Package_CKAN/config.xml&quot;
-
+cp &quot;$JENKINS/Build_CKAN_Docs/config.xml&quot; &quot;$REPO/jobs/Build_CKAN_Docs/config.xml&quot;
 
 cd &quot;$REPO&quot;
 git status
